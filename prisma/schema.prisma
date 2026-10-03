@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DamageType {
+  WATER
+  FIRE
+  MOLD
+  STORM
+  OTHER
+}
+
+enum JobStatus {
+  NEW
+  INSPECTION
+  ESTIMATING
+  PROPOSAL_SENT
+  APPROVED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Job {
+  id                String            @id
+  jobNumber         Int               @unique
+  customerName      String
+  customerEmail     String
+  propertyAddress   String
+  damageType        DamageType
+  damageDescription String?
+  squareFeet        Int
+  status            JobStatus         @default(NEW)
+  estimatedCost     Float             @default(0)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  statusChanges     JobStatusChange[]
+
+  @@index([status])
+  @@index([damageType])
+}
+
+model JobStatusChange {
+  id         String     @id @default(cuid())
+  jobId      String
+  fromStatus JobStatus?
+  toStatus   JobStatus
+  changedAt  DateTime   @default(now())
+  job        Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+}
